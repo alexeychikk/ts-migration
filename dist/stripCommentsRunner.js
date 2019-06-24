@@ -43,7 +43,7 @@ function run(paths, comments, shouldComit) {
             }
         });
         if (shouldComit) {
-            yield commitAll_1.default(`Strip comments`, paths);
+            yield commitAll_1.default(`chore: 🤖 Striped flow comments`, paths);
         }
         console.log(`${count} comments in ${successFiles.length} files stripped successfully.`);
         if (errorFiles.length) {

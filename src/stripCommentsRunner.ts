@@ -9,47 +9,47 @@ const successFiles: string[] = [];
 const errorFiles: string[] = [];
 
 const flowComments = [
-  "// @flow",
-  "// $FlowFixMeImmutable",
-  "// $FlowFixMe",
-  "// @noflow"
+	"// @flow",
+	"// $FlowFixMeImmutable",
+	"// $FlowFixMe",
+	"// @noflow"
 ];
 
 export default async function run(
-  paths: FilePaths,
-  comments: string[] | undefined,
-  shouldComit: boolean
+	paths: FilePaths,
+	comments: string[] | undefined,
+	shouldComit: boolean
 ): Promise<void> {
-  const files = await collectFiles(paths);
-  let count = 0;
-  files.forEach(filePath => {
-    try {
-      const code = readFileSync(filePath, "utf8");
+	const files = await collectFiles(paths);
+	let count = 0;
+	files.forEach(filePath => {
+		try {
+			const code = readFileSync(filePath, "utf8");
 
-      const [fileData, countRemoved] = stripComments(
-        code,
-        comments || flowComments
-      );
-      count = count + countRemoved;
-      const formattedFileData = prettierFormat(fileData, paths.rootDir);
-      writeFileSync(filePath, formattedFileData);
-      successFiles.push(filePath);
-    } catch (e) {
-      console.log(e);
-      errorFiles.push(filePath);
-    }
-  });
+			const [fileData, countRemoved] = stripComments(
+				code,
+				comments || flowComments
+			);
+			count = count + countRemoved;
+			const formattedFileData = prettierFormat(fileData, paths.rootDir);
+			writeFileSync(filePath, formattedFileData);
+			successFiles.push(filePath);
+		} catch (e) {
+			console.log(e);
+			errorFiles.push(filePath);
+		}
+	});
 
-  if (shouldComit) {
-    await commit(`Strip comments`, paths);
-  }
+	if (shouldComit) {
+		await commit(`chore: 🤖 Striped flow comments`, paths);
+	}
 
-  console.log(
-    `${count} comments in ${successFiles.length} files stripped successfully.`
-  );
+	console.log(
+		`${count} comments in ${successFiles.length} files stripped successfully.`
+	);
 
-  if (errorFiles.length) {
-    console.log(`Error stripping comments in ${errorFiles.length} files:`);
-    console.log(errorFiles);
-  }
+	if (errorFiles.length) {
+		console.log(`Error stripping comments in ${errorFiles.length} files:`);
+		console.log(errorFiles);
+	}
 }

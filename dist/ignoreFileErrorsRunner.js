@@ -40,7 +40,7 @@ function run(paths, shouldCommit) {
             }
         }));
         if (shouldCommit) {
-            yield commitAll_1.default("Ignore File Errors", paths);
+            yield commitAll_1.default("chore: 🤖 Ignored all file errors", paths);
         }
         console.log(`${successFiles.length} files with errors ignored successfully.`);
         if (errorFiles.length) {
