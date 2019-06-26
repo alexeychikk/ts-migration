@@ -16,4 +16,8 @@ function asyncForEach(array, callback) {
     });
 }
 exports.asyncForEach = asyncForEach;
+function injectAt(code, position, injectCode) {
+    return code.slice(0, position) + injectCode + code.slice(position);
+}
+exports.injectAt = injectAt;
 //# sourceMappingURL=util.js.map

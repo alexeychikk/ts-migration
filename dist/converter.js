@@ -66,6 +66,7 @@ function convert(files, rootDir) {
             try {
                 code = (yield readFile(path)).toString();
                 code = convertReact_1.injectWithStyles(code);
+                code = convertReact_1.injectCreateStyles(code, path);
                 const transformRes = yield babel.transformAsync(code, exports.babelOptions(rootDir));
                 if (!transformRes || !transformRes.code) {
                     throw new Error(`Empty file after transform: '${path}'`);

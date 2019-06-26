@@ -5,7 +5,11 @@ import recast from "recast";
 import fs from "fs";
 import plugin from "babel-plugin-flow-to-typescript";
 import { promisify } from "util";
-import { replaceReactNodes, injectWithStyles } from "./convertReact";
+import {
+	replaceReactNodes,
+	injectWithStyles,
+	injectCreateStyles
+} from "./convertReact";
 import { asyncForEach } from "./util";
 import prettierFormat from "./prettierFormat";
 import { stripComments } from "./stripComments";
@@ -56,6 +60,7 @@ export default async function convert(files: string[], rootDir: string) {
 		try {
 			code = (await readFile(path)).toString();
 			code = injectWithStyles(code);
+			code = injectCreateStyles(code, path);
 			const transformRes = await babel.transformAsync(
 				code,
 				babelOptions(rootDir)

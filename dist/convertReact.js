@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = require("./util");
 exports.injectWithStyles = (code) => {
     if (!code.includes("withStyles(") || !code.includes("classes: Object"))
         return code;
@@ -12,7 +13,28 @@ exports.replaceReactNodes = (code) => {
     return code
         .replace(/React.Element(<(any|{})>)?/gm, "React.ReactElement")
         .replace(/React.Node(<(any|{})>)?/gm, "React.ReactElement")
-        .replace(/React.ElementRef(<(any|{})>)?/gm, "React.LegacyRef");
+        .replace(/React.ElementRef(<(any|{})>)?/gm, "React.LegacyRef")
+        .replace(/\bintlShape\b/gm, "InjectedIntl")
+        .replace(/import Moment from "moment"/gm, `import { Moment } from "moment"`);
+};
+exports.injectCreateStyles = (code, path) => {
+    if (!path.toLowerCase().endsWith("styles.js"))
+        return code;
+    const indexOfStyles = code.indexOf("const styles =");
+    if (indexOfStyles < 0)
+        return code;
+    const codeFromStyles = code.slice(indexOfStyles);
+    let injectPos = -1;
+    if (codeFromStyles.startsWith("const styles = (")) {
+        injectPos = codeFromStyles.indexOf("=> (");
+        if (injectPos > -1)
+            injectPos += 3;
+    }
+    if (injectPos < 0)
+        return code;
+    injectPos += indexOfStyles;
+    code = util_1.injectAt(code, injectPos, "createStyles");
+    return injectCreateStylesImport(code);
 };
 function injectWithStylesImport(code) {
     if (code.includes("import { withStyles")) {
@@ -31,11 +53,15 @@ function injectWithStylesType(code) {
         return null;
     }
     withStylesInjectPos += 2;
-    code =
-        code.slice(0, withStylesInjectPos) +
-            `WithStyles<typeof styles> & ` +
-            code.slice(withStylesInjectPos);
+    code = util_1.injectAt(code, withStylesInjectPos, `WithStyles<typeof styles> & `);
     code = code.replace(/classes: Object(,|;)?/gm, "");
     return code.replace(/WithStyles<typeof styles> & {(\s|\n|\t)*}/gm, "WithStyles<typeof styles>");
+}
+function injectCreateStylesImport(code) {
+    const injectPos = code.indexOf(`} from "@material-ui/core/styles"`);
+    if (injectPos < 0) {
+        return `import { createStyles } from "@material-ui/core/styles";\n` + code;
+    }
+    return util_1.injectAt(code, injectPos, ", createStyles ");
 }
 //# sourceMappingURL=convertReact.js.map
