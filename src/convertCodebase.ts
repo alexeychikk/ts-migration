@@ -18,6 +18,11 @@ export default async function process(
 	shouldCommit: boolean,
 	filesFromCLI: string[] | undefined
 ) {
+	if (filePaths && filePaths.include) {
+		filePaths.include = filePaths.include.filter(
+			path => !path.startsWith("node_modules")
+		);
+	}
 	const git = simplegit(filePaths.rootDir);
 
 	const files = filesFromCLI || (await collectFiles(filePaths));
