@@ -22,11 +22,15 @@ const babel = __importStar(require("@babel/core"));
 // @ts-ignore
 const plugin_syntax_dynamic_import_1 = __importDefault(require("@babel/plugin-syntax-dynamic-import"));
 const recast_1 = __importDefault(require("recast"));
-const fs_1 = require("fs");
+const fs_1 = __importDefault(require("fs"));
 const babel_plugin_flow_to_typescript_1 = __importDefault(require("babel-plugin-flow-to-typescript"));
-const util_1 = require("./util");
+const convertReact_1 = require("convertReact");
+const util_1 = require("util");
+const util_2 = require("./util");
 const prettierFormat_1 = __importDefault(require("./prettierFormat"));
 const stripComments_1 = require("./stripComments");
+const readFile = util_1.promisify(fs_1.default.readFile);
+const writeFile = util_1.promisify(fs_1.default.writeFile);
 function recastParse(code, options, parse) {
     return recast_1.default.parse(code, {
         parser: {
@@ -56,19 +60,26 @@ const successFiles = [];
 const errorFiles = [];
 function convert(files, rootDir) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield util_1.asyncForEach(files, (path, i) => __awaiter(this, void 0, void 0, function* () {
+        yield util_2.asyncForEach(files, (path, i) => __awaiter(this, void 0, void 0, function* () {
             console.log(`${i} of ${files.length}: Converting ${path}`);
-            let res;
+            let code;
             try {
-                res = yield babel.transformFileAsync(path, exports.babelOptions(rootDir));
-                res.code = stripComments_1.stripComments(res.code, ["// @flow", "// @noflow"])[0];
+                code = (yield readFile(path)).toString();
+                code = convertReact_1.injectWithStyles(code);
+                const transformRes = yield babel.transformAsync(code, exports.babelOptions(rootDir));
+                if (!transformRes || !transformRes.code) {
+                    throw new Error(`Empty file after transform: '${path}'`);
+                }
+                code = transformRes.code;
+                code = stripComments_1.stripComments(code, ["// @flow", "// @noflow"])[0];
+                code = convertReact_1.replaceReactNodes(code);
             }
             catch (err) {
                 console.log(err);
                 errorFiles.push(path);
                 return;
             }
-            fs_1.writeFileSync(path, res.code);
+            yield writeFile(path, code);
             successFiles.push(path);
         }));
         return {

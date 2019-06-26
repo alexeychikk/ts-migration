@@ -61,16 +61,19 @@ function process(filePaths, shouldCommit, filesFromCLI) {
                 const file = fs_1.default.readFileSync(path, "utf8");
                 return /("react")|('react')/gm.test(file);
             }
+            function getExtensions(filePath) {
+                const oldExt = path_1.default.extname(filePath);
+                let newExt;
+                if (oldExt === ".jsx")
+                    newExt = ".tsx";
+                else
+                    newExt = containsReact(filePath) ? ".tsx" : ".ts";
+                return { oldExt, newExt };
+            }
             yield util_2.asyncForEach(successFiles, (path, i) => __awaiter(this, void 0, void 0, function* () {
                 console.log(`${i + 1} of ${successFiles.length}: Renaming ${path}`);
                 try {
-                    const parsedPath = path_1.default.parse(path);
-                    const oldExt = parsedPath.ext;
-                    const newExt = (() => {
-                        if (oldExt === "jsx")
-                            return ".tsx";
-                        return containsReact(path) ? ".tsx" : ".ts";
-                    })();
+                    const { oldExt, newExt } = getExtensions(path);
                     const newPath = path.replace(oldExt, newExt);
                     yield git.mv(path, newPath);
                     if (path.includes("__tests__") || path.includes("-test")) {

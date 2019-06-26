@@ -55,21 +55,25 @@ export default async function process(
 			}
 		}
 
-		function containsReact(path: string) {
+		function containsReact(path: string): boolean {
 			const file = fs.readFileSync(path, "utf8");
 			return /("react")|('react')/gm.test(file);
+		}
+
+		function getExtensions(
+			filePath: string
+		): { oldExt: string; newExt: string } {
+			const oldExt = pathUtils.extname(filePath);
+			let newExt: string;
+			if (oldExt === ".jsx") newExt = ".tsx";
+			else newExt = containsReact(filePath) ? ".tsx" : ".ts";
+			return { oldExt, newExt };
 		}
 
 		await asyncForEach(successFiles, async (path, i) => {
 			console.log(`${i + 1} of ${successFiles.length}: Renaming ${path}`);
 			try {
-				const parsedPath = pathUtils.parse(path);
-				const oldExt = parsedPath.ext;
-
-				const newExt = (() => {
-					if (oldExt === "jsx") return ".tsx";
-					return containsReact(path) ? ".tsx" : ".ts";
-				})();
+				const { oldExt, newExt } = getExtensions(path);
 
 				const newPath = path.replace(oldExt, newExt);
 				await git.mv(path, newPath);
