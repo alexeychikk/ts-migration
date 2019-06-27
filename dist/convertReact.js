@@ -16,6 +16,9 @@ exports.replaceReactNodes = (code) => {
         .replace(/React.ElementRef(<(any|{})>)?/gm, "React.LegacyRef")
         .replace(/\bintlShape\b/gm, "InjectedIntl")
         .replace(/\bIntlShape\b/gm, "InjectedIntl")
+        .replace(/\bFieldProps\b/gm, "WrappedFieldProps")
+        .replace(/\$Shape\b/gm, "Partial")
+        .replace(/Generator(<([A-Za-z0-9](,\s?)*)*>)?/gm, "Generator")
         .replace(/import Moment from "moment"/gm, `import { Moment } from "moment"`);
 };
 exports.injectCreateStyles = (code, path) => {

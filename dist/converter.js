@@ -72,7 +72,11 @@ function convert(files, rootDir) {
                     throw new Error(`Empty file after transform: '${path}'`);
                 }
                 code = transformRes.code;
-                code = stripComments_1.stripComments(code, ["// @flow", "// @noflow"])[0];
+                code = stripComments_1.stripComments(code, [
+                    "// @flow",
+                    "// @noflow",
+                    "// $FlowFixMe"
+                ])[0];
                 code = convertReact_1.replaceReactNodes(code);
             }
             catch (err) {

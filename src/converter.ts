@@ -69,7 +69,11 @@ export default async function convert(files: string[], rootDir: string) {
 				throw new Error(`Empty file after transform: '${path}'`);
 			}
 			code = transformRes.code;
-			code = stripComments(code, ["// @flow", "// @noflow"])[0];
+			code = stripComments(code, [
+				"// @flow",
+				"// @noflow",
+				"// $FlowFixMe"
+			])[0];
 			code = replaceReactNodes(code);
 		} catch (err) {
 			console.log(err);
