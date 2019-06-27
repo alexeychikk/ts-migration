@@ -14,3 +14,7 @@ export function injectAt(
 ): string {
 	return code.slice(0, position) + injectCode + code.slice(position);
 }
+
+export async function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
+}

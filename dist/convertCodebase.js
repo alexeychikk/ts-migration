@@ -20,7 +20,7 @@ const converter_1 = __importDefault(require("./converter"));
 const util_2 = require("./util");
 const commitAll_1 = __importDefault(require("./commitAll"));
 const exists = util_1.promisify(fs_1.default.exists);
-function process(filePaths, shouldCommit, filesFromCLI) {
+function convertCodebase(filePaths, shouldCommit, filesFromCLI) {
     return __awaiter(this, void 0, void 0, function* () {
         if (filePaths && filePaths.include) {
             filePaths.include = filePaths.include.filter(path => !path.startsWith("node_modules"));
@@ -31,48 +31,22 @@ function process(filePaths, shouldCommit, filesFromCLI) {
         const { successFiles, errorFiles } = yield converter_1.default(files, filePaths.rootDir);
         console.log(`${successFiles.length} converted successfully.`);
         console.log(`${errorFiles.length} errors:`);
-        if (errorFiles.length)
+        if (errorFiles.length) {
             console.log(errorFiles);
+            yield revert(1);
+        }
+        const renameErrors = [];
+        const snapsFound = [];
+        const snapsNotFound = [];
         if (shouldCommit) {
-            yield commitAll_1.default("chore: 🤖 Converted Flow to TypeScript", filePaths);
-            const renameErrors = [];
+            try {
+                yield commitAll_1.default("chore: 🤖 Converted Flow to TypeScript", filePaths);
+                yield util_2.sleep(1000);
+            }
+            catch (e) {
+                yield revert(1);
+            }
             console.log("renaming files");
-            const snapsFound = [];
-            const snapsNotFound = [];
-            function renameSnap(path, oldExt, newExt) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    const parsedPath = path_1.default.parse(path);
-                    const jsSnapPath = `${parsedPath.dir}/__snapshots__/${parsedPath.name}${oldExt}.snap`;
-                    const tsSnapPath = `${parsedPath.dir}/__snapshots__/${parsedPath.name}${newExt}.snap`;
-                    if (yield exists(jsSnapPath)) {
-                        console.log(`Renaming ${jsSnapPath} to ${tsSnapPath}`);
-                        snapsFound.push(jsSnapPath);
-                        try {
-                            yield git.mv(jsSnapPath, tsSnapPath);
-                        }
-                        catch (e) {
-                            console.log(e);
-                            renameErrors.push(path);
-                        }
-                    }
-                    else {
-                        snapsNotFound.push(jsSnapPath);
-                    }
-                });
-            }
-            function containsReact(path) {
-                const file = fs_1.default.readFileSync(path, "utf8");
-                return /("react")|('react')/gm.test(file);
-            }
-            function getExtensions(filePath) {
-                const oldExt = path_1.default.extname(filePath);
-                let newExt;
-                if (oldExt === ".jsx")
-                    newExt = ".tsx";
-                else
-                    newExt = containsReact(filePath) ? ".tsx" : ".ts";
-                return { oldExt, newExt };
-            }
             yield util_2.asyncForEach(successFiles, (path, i) => __awaiter(this, void 0, void 0, function* () {
                 console.log(`${i + 1} of ${successFiles.length}: Renaming ${path}`);
                 try {
@@ -85,15 +59,23 @@ function process(filePaths, shouldCommit, filesFromCLI) {
                 }
                 catch (e) {
                     console.log(e);
-                    renameErrors.push(path);
+                    renameErrors.push(`${path}:${e.message}`);
                 }
             }));
             console.log(`${renameErrors.length} errors renaming files`);
-            if (renameErrors.length)
+            if (renameErrors.length) {
                 console.log(renameErrors);
+                yield revert(2);
+            }
             console.log(`Snaps found: ${snapsFound.length}`);
             console.log(`Snaps Not found: ${snapsNotFound.length}`);
-            yield commitAll_1.default("chore: 🤖 Renamed js to ts", filePaths);
+            try {
+                yield commitAll_1.default("chore: 🤖 Renamed js to ts", filePaths);
+                yield util_2.sleep(1000);
+            }
+            catch (e) {
+                yield revert(2);
+            }
             console.log(`${successFiles.length} converted successfully.`);
             console.log(`${errorFiles.length} errors`);
             if (errorFiles.length)
@@ -102,7 +84,49 @@ function process(filePaths, shouldCommit, filesFromCLI) {
         else {
             console.log("skipping commit in dry run mode");
         }
+        function renameSnap(path, oldExt, newExt) {
+            return __awaiter(this, void 0, void 0, function* () {
+                const parsedPath = path_1.default.parse(path);
+                const jsSnapPath = `${parsedPath.dir}/__snapshots__/${parsedPath.name}${oldExt}.snap`;
+                const tsSnapPath = `${parsedPath.dir}/__snapshots__/${parsedPath.name}${newExt}.snap`;
+                if (yield exists(jsSnapPath)) {
+                    console.log(`Renaming ${jsSnapPath} to ${tsSnapPath}`);
+                    snapsFound.push(jsSnapPath);
+                    try {
+                        yield git.mv(jsSnapPath, tsSnapPath);
+                    }
+                    catch (e) {
+                        console.log(e);
+                        renameErrors.push(path);
+                    }
+                }
+                else {
+                    snapsNotFound.push(jsSnapPath);
+                }
+            });
+        }
+        function containsReact(path) {
+            const file = fs_1.default.readFileSync(path, "utf8");
+            return /("react")|('react')/gm.test(file);
+        }
+        function getExtensions(filePath) {
+            const oldExt = path_1.default.extname(filePath);
+            let newExt;
+            if (oldExt === ".jsx")
+                newExt = ".tsx";
+            else
+                newExt = containsReact(filePath) ? ".tsx" : ".ts";
+            return { oldExt, newExt };
+        }
+        function revert(commitsBefore = 0) {
+            return __awaiter(this, void 0, void 0, function* () {
+                yield (commitsBefore
+                    ? git.reset(["--hard", `HEAD~${commitsBefore}`])
+                    : git.reset("hard"));
+                process.exit(1);
+            });
+        }
     });
 }
-exports.default = process;
+exports.default = convertCodebase;
 //# sourceMappingURL=convertCodebase.js.map

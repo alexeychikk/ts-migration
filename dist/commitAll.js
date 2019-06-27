@@ -20,14 +20,14 @@ function commit(message, filePaths) {
             yield git.add(".");
         }
         catch (e) {
-            console.log("error adding");
+            console.error("Error adding files to git");
             throw new Error(e);
         }
         try {
             yield git.commit(message, undefined, { "-n": true });
         }
         catch (e) {
-            console.log("error committing");
+            console.error("Error committing files");
             throw new Error(e);
         }
     });

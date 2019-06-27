@@ -20,4 +20,10 @@ function injectAt(code, position, injectCode) {
     return code.slice(0, position) + injectCode + code.slice(position);
 }
 exports.injectAt = injectAt;
+function sleep(ms) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    });
+}
+exports.sleep = sleep;
 //# sourceMappingURL=util.js.map

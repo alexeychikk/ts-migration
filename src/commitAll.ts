@@ -7,14 +7,14 @@ export default async function commit(message: string, filePaths: FilePaths) {
   try {
     await git.add(".");
   } catch (e) {
-    console.log("error adding");
+    console.error("Error adding files to git");
     throw new Error(e);
   }
 
   try {
     await git.commit(message, undefined, { "-n": true });
   } catch (e) {
-    console.log("error committing");
+    console.error("Error committing files");
     throw new Error(e);
   }
 }

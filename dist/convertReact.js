@@ -12,9 +12,10 @@ exports.injectWithStyles = (code) => {
 exports.replaceReactNodes = (code) => {
     return code
         .replace(/React.Element(<(any|{})>)?/gm, "React.ReactElement")
-        .replace(/React.Node(<(any|{})>)?/gm, "React.ReactElement")
+        .replace(/React.Node(<(any|{})>)?/gm, "React.ReactNode")
         .replace(/React.ElementRef(<(any|{})>)?/gm, "React.LegacyRef")
         .replace(/\bintlShape\b/gm, "InjectedIntl")
+        .replace(/\bIntlShape\b/gm, "InjectedIntl")
         .replace(/import Moment from "moment"/gm, `import { Moment } from "moment"`);
 };
 exports.injectCreateStyles = (code, path) => {
