@@ -34,7 +34,7 @@ export default async function convertCodebase(
 	console.log(`${errorFiles.length} errors:`);
 	if (errorFiles.length) {
 		console.log(errorFiles);
-		await revert(1);
+		await revert();
 	}
 
 	const renameErrors: string[] = [];
@@ -45,7 +45,7 @@ export default async function convertCodebase(
 			await commit("chore: 🤖 Converted Flow to TypeScript", filePaths);
 			await sleep(1000);
 		} catch (e) {
-			await revert(1);
+			await revert();
 		}
 
 		console.log("renaming files");
@@ -69,7 +69,7 @@ export default async function convertCodebase(
 		console.log(`${renameErrors.length} errors renaming files`);
 		if (renameErrors.length) {
 			console.log(renameErrors);
-			await revert(2);
+			await revert();
 		}
 
 		console.log(`Snaps found: ${snapsFound.length}`);
@@ -78,7 +78,7 @@ export default async function convertCodebase(
 			await commit("chore: 🤖 Renamed js to ts", filePaths);
 			await sleep(1000);
 		} catch (e) {
-			await revert(2);
+			await revert();
 		}
 
 		console.log(`${successFiles.length} converted successfully.`);
@@ -119,10 +119,8 @@ export default async function convertCodebase(
 		return { oldExt, newExt };
 	}
 
-	async function revert(commitsBefore: number = 0) {
-		await (commitsBefore
-			? git.reset(["--hard", `HEAD~${commitsBefore}`])
-			: git.reset("hard"));
+	async function revert() {
+		await git.reset("hard");
 		process.exit(1);
 	}
 }

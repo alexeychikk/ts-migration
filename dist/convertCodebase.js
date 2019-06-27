@@ -33,7 +33,7 @@ function convertCodebase(filePaths, shouldCommit, filesFromCLI) {
         console.log(`${errorFiles.length} errors:`);
         if (errorFiles.length) {
             console.log(errorFiles);
-            yield revert(1);
+            yield revert();
         }
         const renameErrors = [];
         const snapsFound = [];
@@ -44,7 +44,7 @@ function convertCodebase(filePaths, shouldCommit, filesFromCLI) {
                 yield util_2.sleep(1000);
             }
             catch (e) {
-                yield revert(1);
+                yield revert();
             }
             console.log("renaming files");
             yield util_2.asyncForEach(successFiles, (path, i) => __awaiter(this, void 0, void 0, function* () {
@@ -65,7 +65,7 @@ function convertCodebase(filePaths, shouldCommit, filesFromCLI) {
             console.log(`${renameErrors.length} errors renaming files`);
             if (renameErrors.length) {
                 console.log(renameErrors);
-                yield revert(2);
+                yield revert();
             }
             console.log(`Snaps found: ${snapsFound.length}`);
             console.log(`Snaps Not found: ${snapsNotFound.length}`);
@@ -74,7 +74,7 @@ function convertCodebase(filePaths, shouldCommit, filesFromCLI) {
                 yield util_2.sleep(1000);
             }
             catch (e) {
-                yield revert(2);
+                yield revert();
             }
             console.log(`${successFiles.length} converted successfully.`);
             console.log(`${errorFiles.length} errors`);
@@ -118,11 +118,9 @@ function convertCodebase(filePaths, shouldCommit, filesFromCLI) {
                 newExt = containsReact(filePath) ? ".tsx" : ".ts";
             return { oldExt, newExt };
         }
-        function revert(commitsBefore = 0) {
+        function revert() {
             return __awaiter(this, void 0, void 0, function* () {
-                yield (commitsBefore
-                    ? git.reset(["--hard", `HEAD~${commitsBefore}`])
-                    : git.reset("hard"));
+                yield git.reset("hard");
                 process.exit(1);
             });
         }
